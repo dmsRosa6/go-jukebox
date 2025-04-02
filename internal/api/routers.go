@@ -1,25 +1,21 @@
 package api
 
 import (
-	"net/http"
-
+	"github.com/dmsrosa/jukebox/config"
+	"github.com/dmsrosa/jukebox/internal/service"
 	"github.com/gorilla/mux"
 )
 
-// NewRouter creates a new router with our REST API endpoints.
-func NewRouter() *mux.Router {
+// NewRouter creates a new Gorilla Mux router and registers routes.
+func NewRouter(jb *service.Jukebox, conf config.Config) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
+	h := NewHandlers(jb)
 
-	// Songs endpoints
-	router.HandleFunc("/jukebox", getJukeboxSongs).Methods("GET")
-	router.HandleFunc("/songs/{name}", getSongsByName).Methods("GET")
-	router.HandleFunc("/jukebox/{id}", addSongJukebox).Methods("POST")
-	router.HandleFunc("/jukebox/skip", skipSongJukebox).Methods("POST")
-	router.HandleFunc("/jukebox/clear", clearJukebox).Methods("POST")
-	router.HandleFunc("/jukebox/shuffle", shuffleJukebox).Methods("POST")
-
-	// Serve static files or documentation if needed
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("docs"))))
+	// Register endpoints.
+	router.HandleFunc("/api/songs", h.GetSongs).Methods("GET")
+	router.HandleFunc("/api/current", h.GetCurrent).Methods("GET")
+	router.HandleFunc("/api/queue/enqueue", h.EnqueueSong).Methods("PUT")
+	router.HandleFunc("/api/queue/dequeue", h.DequeueSong).Methods("DELETE")
 
 	return router
 }
